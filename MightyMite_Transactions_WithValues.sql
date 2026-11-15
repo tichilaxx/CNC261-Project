@@ -1,8 +1,8 @@
 -- ============================================================================
 -- Project: Mighty-Mite Motors (MMM) Database
--- Description: 10 Transactions SQL with Explicit Transaction Control & Values
+-- Description: 10 Transactions SQL with Idempotent Auto-Clean & Transaction Control
 -- DBMS Target: Microsoft SQL Server (SSMS) - T-SQL Compatible
--- Features: BEGIN TRAN, COMMIT, ROLLBACK, TRY...CATCH, SET ISOLATION LEVEL
+-- Feature: สามารถกด Execute (F5) ซ้ำกี่รอบก็ได้ โดยไม่ติด Duplicate Key Error
 -- ============================================================================
 
 -- ============================================================================
@@ -11,6 +11,11 @@
 -- และ Model 8 (Pickup) จำนวน 15 คัน ออกเป็นใบสั่งซื้อใหม่เลขที่ 5004
 -- ============================================================================
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+-- [Auto-Clean]: ลบข้อมูลทดสอบเดิมของ Order 5004 ก่อน (เพื่อให้กดรันซ้ำกี่รอบก็ได้)
+DELETE FROM shipment WHERE order_numb = 5004;
+DELETE FROM order_line WHERE order_numb = 5004;
+DELETE FROM customer_order WHERE order_numb = 5004;
 
 BEGIN TRANSACTION;
 BEGIN TRY
@@ -38,12 +43,10 @@ BEGIN TRY
     SET order_total = (SELECT SUM(line_total) FROM order_line WHERE order_numb = 5004)
     WHERE order_numb = 5004;
 
-    -- หากทุกคำสั่งสำเร็จ ให้ Commit ข้อมูลลง Disk ถาวร
     COMMIT TRANSACTION;
     PRINT 'Transaction 1: Completed and Committed Successfully.';
 END TRY
 BEGIN CATCH
-    -- หากเกิดข้อผิดพลาด ให้ Rollback ยกเลิกทุกคำสั่งที่ทำไป
     IF @@TRANCOUNT > 0
         ROLLBACK TRANSACTION;
     PRINT 'Transaction 1: Error occurred, transaction rolled back.';
@@ -56,6 +59,11 @@ GO
 -- สถานการณ์: จัดส่งรถ Model 8 จำนวน 2 คัน (Serial: 20009, 20010) ให้แก่ Order 5004
 -- ============================================================================
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
+-- [Auto-Clean]: คืนค่าสถานะรถเดิมก่อนเทสซ้ำ
+DELETE FROM shipment WHERE order_numb = 5004 AND model_numb = 8;
+UPDATE product SET status_code = 1, date_shipped = NULL, order_numb = NULL WHERE serial_numb IN (20009, 20010);
+UPDATE order_line SET all_shipped = 'N' WHERE order_numb = 5004 AND model_numb = 8;
 
 BEGIN TRANSACTION;
 BEGIN TRY
@@ -100,6 +108,9 @@ GO
 -- สถานการณ์: สายการผลิต Line 1 ผลิตรถ Model 8 เสร็จ 3 คัน แผนกคลังสินค้ารับมอบและลงทะเบียน Serial Number ใหม่ (20051, 20052, 20053)
 -- ============================================================================
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+-- [Auto-Clean]: ลบซีเรียลเดิมที่เคยเทสไว้ก่อนหน้า
+DELETE FROM product WHERE serial_numb IN (20051, 20052, 20053);
 
 BEGIN TRANSACTION;
 BEGIN TRY
@@ -172,6 +183,9 @@ GO
 -- ============================================================================
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 
+-- [Auto-Clean]: ลบตารางผลิตของวันที่ 2026-11-18 ออกก่อน
+DELETE FROM line_schedule WHERE line_numb = 1 AND production_date = '2026-11-18';
+
 BEGIN TRANSACTION;
 BEGIN TRY
     -- Step 1: ตรวจสอบสถานะความพร้อมของ Line 1
@@ -204,6 +218,10 @@ GO
 -- สถานการณ์: เปิด PO ใหม่เลขที่ 1004 ส่งไปยัง Apex Industrial Plastics (supplier_numb = 201) เพื่อสั่งซื้อ Plastic #3 จำนวน 600 lbs @ $2.50
 -- ============================================================================
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
+
+-- [Auto-Clean]: ลบ PO 1004 เดิมก่อน
+DELETE FROM material_order_line WHERE po_numb = 1004;
+DELETE FROM material_order WHERE po_numb = 1004;
 
 BEGIN TRANSACTION;
 BEGIN TRY
@@ -321,6 +339,10 @@ GO
 -- ============================================================================
 SET TRANSACTION ISOLATION LEVEL READ COMMITTED;
 
+-- [Auto-Clean]: ลบข้อมูล Model 13 เดิมออกก่อน
+DELETE FROM material_needed WHERE model_numb = 13;
+DELETE FROM model WHERE model_numb = 13;
+
 BEGIN TRANSACTION;
 BEGIN TRY
     -- Step 1: เพิ่มข้อมูลรุ่นรถใหม่ลงใน model
@@ -355,6 +377,11 @@ GO
 -- สถานการณ์: ตรวจสอบ Order 5002 (ซึ่งเดิมสั่ง Model 2 ไว้ 100 คัน ส่งไปแล้ว 40 คัน ค้างส่งอีก 60 คัน) จากนั้นบันทึกการจัดส่งส่วนที่เหลือ 60 คัน และปิดออเดอร์
 -- ============================================================================
 SET TRANSACTION ISOLATION LEVEL REPEATABLE READ;
+
+-- [Auto-Clean]: คืนค่าสถานะ Order 5002 เป็นก่อนส่งงวดที่ 2
+DELETE FROM shipment WHERE order_numb = 5002 AND quantity_shipped = 60;
+UPDATE order_line SET all_shipped = 'N' WHERE order_numb = 5002 AND model_numb = 2;
+UPDATE customer_order SET order_filled = 'N' WHERE order_numb = 5002;
 
 BEGIN TRANSACTION;
 BEGIN TRY
