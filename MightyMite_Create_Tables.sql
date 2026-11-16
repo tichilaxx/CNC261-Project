@@ -144,10 +144,12 @@ CREATE TABLE customer_order
     order_date              DATE            NOT NULL,
     order_total             DECIMAL(10, 2)  NOT NULL DEFAULT 0.00,
     order_filled            CHAR(1)         NOT NULL DEFAULT 'N',
+    order_by                VARCHAR(20)     NOT NULL DEFAULT 'Sales', -- 'Sales' หรือ 'Reseller'
     CONSTRAINT pk_customer_order PRIMARY KEY (order_numb),
     CONSTRAINT fk_custord_customer FOREIGN KEY (customer_numb) 
         REFERENCES customer (customer_numb),
-    CONSTRAINT chk_order_filled CHECK (order_filled IN ('Y', 'N'))
+    CONSTRAINT chk_order_filled CHECK (order_filled IN ('Y', 'N')),
+    CONSTRAINT chk_order_by CHECK (order_by IN ('Sales', 'Reseller'))
 );
 
 -- ============================================================================
