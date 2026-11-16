@@ -28,9 +28,9 @@ BEGIN TRY
     FROM model 
     WHERE model_numb IN (1, 8);
 
-    -- Step 2: สร้างใบสั่งซื้อหลัก (Order #5004)
-    INSERT INTO customer_order (order_numb, customer_numb, order_date, order_total, order_filled)
-    VALUES (5004, 104, CAST(GETDATE() AS DATE), 0.00, 'N');
+    -- Step 2: สร้างใบสั่งซื้อหลัก (Order #5004 - บันทึกโดยฝ่ายขาย: order_by = 'Sales')
+    INSERT INTO customer_order (order_numb, customer_numb, order_date, order_total, order_filled, order_by)
+    VALUES (5004, 104, CAST(GETDATE() AS DATE), 0.00, 'N', 'Sales');
 
     -- Step 3: เพิ่มรายการสินค้าย่อยลงใน order_line
     INSERT INTO order_line (order_numb, model_numb, quantity_ordered, unit_price, line_total, all_shipped)

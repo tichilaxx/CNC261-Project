@@ -142,25 +142,25 @@ INSERT INTO material_order_line (po_numb, material_id_numb, material_quantity, m
 -- ----------------------------------------------------------------------------
 -- 9. INSERT INTO customer_order & order_line (คำสั่งซื้อจากตัวแทนจำหน่าย)
 -- ----------------------------------------------------------------------------
--- ออเดอร์ #5001: ส่งมอบครบแล้ว 100% (Order Filled = 'Y')
-INSERT INTO customer_order (order_numb, customer_numb, order_date, order_total, order_filled) VALUES
-(5001, 101, '2026-11-05', 13747.20, 'Y');
+-- ออเดอร์ #5001: เจ้าหน้าที่ฝ่ายขายบันทึกข้อมูล (order_by = 'Sales') ส่งมอบครบแล้ว 100% (Order Filled = 'Y')
+INSERT INTO customer_order (order_numb, customer_numb, order_date, order_total, order_filled, order_by) VALUES
+(5001, 101, '2026-11-05', 13747.20, 'Y', 'Sales');
 
 INSERT INTO order_line (order_numb, model_numb, quantity_ordered, unit_price, line_total, all_shipped) VALUES
 (5001, 1, 50, 124.95,  6247.50, 'Y'),
 (5001, 2, 30, 249.99,  7499.70, 'Y');
 
--- ออเดอร์ #5002: ทยอยส่งบางส่วน (Partial Shipment: Model 8 ส่งครบ, Model 2 ส่งได้แค่บางส่วน)
-INSERT INTO customer_order (order_numb, customer_numb, order_date, order_total, order_filled) VALUES
-(5002, 102, '2026-11-08', 34496.50, 'N');
+-- ออเดอร์ #5002: ร้านค้าตัวแทนสั่งซื้อผ่านระบบออนไลน์ (order_by = 'Reseller') ทยอยส่งบางส่วน
+INSERT INTO customer_order (order_numb, customer_numb, order_date, order_total, order_filled, order_by) VALUES
+(5002, 102, '2026-11-08', 34496.50, 'N', 'Reseller');
 
 INSERT INTO order_line (order_numb, model_numb, quantity_ordered, unit_price, line_total, all_shipped) VALUES
 (5002, 8,  50, 189.95,  9497.50, 'Y'), -- สั่ง 50 ส่งครบแล้ว 50
 (5002, 2, 100, 249.99, 24999.00, 'N'); -- สั่ง 100 เพิ่งส่งไป 40 ค้างส่ง 60
 
--- ออเดอร์ #5003: เพิ่งสั่งเข้ามา ยังไม่ได้จัดส่ง (Pending)
-INSERT INTO customer_order (order_numb, customer_numb, order_date, order_total, order_filled) VALUES
-(5003, 103, '2026-11-13', 23994.75, 'N');
+-- ออเดอร์ #5003: ร้านค้าตัวแทนสั่งซื้อผ่านระบบออนไลน์ (order_by = 'Reseller') เพิ่งสั่งเข้ามา ยังไม่ได้จัดส่ง
+INSERT INTO customer_order (order_numb, customer_numb, order_date, order_total, order_filled, order_by) VALUES
+(5003, 103, '2026-11-13', 23994.75, 'N', 'Reseller');
 
 INSERT INTO order_line (order_numb, model_numb, quantity_ordered, unit_price, line_total, all_shipped) VALUES
 (5003, 4, 80, 249.95, 19996.00, 'N'),
