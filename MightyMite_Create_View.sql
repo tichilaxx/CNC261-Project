@@ -1,3 +1,11 @@
+IF OBJECT_ID('dbo.mv_Production_Pending_Summary', 'V') IS NOT NULL
+    DROP VIEW dbo.mv_Production_Pending_Summary;
+GO
+
+IF OBJECT_ID('dbo.v_Reseller_Catalog', 'V') IS NOT NULL
+    DROP VIEW dbo.v_Reseller_Catalog;
+GO
+
 CREATE VIEW dbo.v_Reseller_Catalog
 AS
 SELECT 
@@ -8,7 +16,7 @@ SELECT
     COUNT(p.serial_numb) AS available_in_stock
 FROM dbo.model m
 LEFT JOIN dbo.product p 
-    ON m.model_numb = p.model_numb AND p.status_code = 1 -- 1 = In Stock
+    ON m.model_numb = p.model_numb AND p.status_code = 1
 GROUP BY 
     m.model_numb, 
     m.model_description, 
@@ -16,10 +24,8 @@ GROUP BY
     m.shipping_weight;
 GO
 
--- ให้สิทธิ์เว็บสั่งซื้อดูผ่าน View นี้เท่านั้น
 GRANT SELECT ON dbo.v_Reseller_Catalog TO app_reseller_portal;
-
---===========================================================================
+GO
 
 CREATE VIEW dbo.mv_Production_Pending_Summary
 WITH SCHEMABINDING
@@ -33,7 +39,6 @@ WHERE ol.all_shipped = 'N'
 GROUP BY ol.model_numb;
 GO
 
--- สร้าง Unique Clustered Index เพื่อเปลี่ยน View ให้เป็น Materialized View บน Disk
 CREATE UNIQUE CLUSTERED INDEX cdx_mv_prod_pending 
 ON dbo.mv_Production_Pending_Summary (model_numb);
 GO
